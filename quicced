@@ -4,7 +4,7 @@
 # A tool for quickly configuring up a FreeBSD system
 
 # Run the following to enable logging
-# quicced-config.sh 2>&1 | tee -a quicced.log
+# quicced.sh 2>&1 | tee -a quicced.log
 
 # Variables
 rc=/etc/rc.conf
@@ -315,7 +315,7 @@ desktop() {
 		
 		if ! grep -Fxq 'hald_enable="YES"' $rc;
 		then
-				echo 'hald_enable="YES"' >> $rc
+			echo 'hald_enable="YES"' >> $rc
 		fi
 	fi
 	
@@ -417,7 +417,7 @@ programs() {
 	echo "3. Vim COnsole				6. Visual Studio Code"
 	echo
 	echo "Graphics"
-	echo "11. GIMP				14. Inkscape"
+	echo "11. GIMP                                  14. Inkscape"
 	echo "12. Darktable				15. Blender"
 	echo "13. Krita"
 	echo
