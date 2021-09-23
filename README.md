@@ -14,6 +14,7 @@ What started out as a small script for me to quickly configure a FreeBSD system 
 - Install Xorg, plus a selection of Desktop Environments and Window Managers
 - Install OSS and audio mixers
 - Install misc. software such as web browsers, office software, text editors, etc.
+- Applies workarounds to various bugs
 
 ## Experimental Features
 - Enable Linux Compatibility
