@@ -30,7 +30,7 @@ Experimental Features is a section in the main menu where features/options go if
 ## Known Bugs
 - KDE Plasma crashes in VirtualBox
 - Linux Compatibility may cause issues if run more than once.
-- WPrefs fails to launch in Window Maker **Workaround: execute the following in the terminal to launch it**
+- WPrefs fails to launch in Window Maker **Workaround: execute the following in the terminal to launch it**\
 `/usr/local/GNUstep//Applications/WPrefs.app/WPrefs`
 
 ## Questions That Will Eventually Get Asked
