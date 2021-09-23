@@ -1,5 +1,5 @@
 # quicced
-Menu-based post-installation script for FreeBSD \
+Menu-based post-installation script for FreeBSD systems.\
 **quicced is in no way affiliated with, approved by, sponsored by, or related to the FreeBSD Project or FreeBSD Foundation**
 
 **!!!WARNING!!!**\
