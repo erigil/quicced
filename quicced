@@ -1,0 +1,736 @@
+#!/bin/sh
+
+# quicced-0.1.0
+# A tool for quickly configuring up a FreeBSD system
+
+# Run the following to enable logging
+# quicced-config.sh 2>&1 | tee -a quicced.log
+
+# Variables
+rc=/etc/rc.conf
+bootcfg=/boot/loader.conf
+fstab=/etc/fstab
+sysctl=/etc/sysctl.conf
+#template = ./usr/local/share/quicced-config/custom-quicced-template
+
+# Main Menu
+main() {
+	clear
+	echo "Main menu initialized" >> $log
+			
+	echo "--------------"
+	echo "quicced-0.1.0"
+	echo "--------------"
+	echo 
+	echo "General:"
+	echo "1. Update System & Packages"
+	echo "2. Graphics Drivers"
+	echo "3. X.Org & Desktop"
+	echo "4. Audio"
+	echo "5. Additional Programs"
+	echo 
+	echo "Hardware Specific:"
+	echo  "11. Fix Stuttering (Ryzen CPUs)"
+	echo
+	echo "Experimental"
+	echo "21. Linux Compatability"
+	echo
+	echo "0. Quit"
+	echo
+	echo "Choice:"
+	
+	read mmenu
+	case $mmenu in
+	
+		# Update system
+		1)
+			clear
+			freebsd-update fetch install
+			pkg bootstrap
+			pkg update
+			pkg upgrade -y
+			echo "System updated!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			;;
+			
+		# GPU drivers
+		2) 
+			clear
+			graphics
+			;;
+			
+		# X.Org & DE/WM
+		3)
+			clear
+			desktop
+			;;
+		
+		# Audio
+		4
+			clear
+			audio
+			;;
+		
+		# Programs	
+		5)
+			clear
+			programs
+			;;
+		
+		# Fix stutter
+		11)
+			clear
+			stutter
+			;;
+		
+		# Experimental features
+		
+		# Linux Compatability
+		21)
+			clear
+			compat
+			;;
+			
+		# Quit
+		0)
+			clear
+			echo "###################################################################"
+			echo "#                                                                 #"
+			echo "# Some changes may require you to reboot for them to take effect. #"
+			echo "#                                                                 #"
+			echo "###################################################################"
+			exit 0
+			;;
+		*)
+			echo "Invalid choice!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			main
+			;;
+	esac
+}
+
+# Select GPU driver
+graphics() {
+	clear
+	echo "Select Graphics Driver:"
+	echo "1. AMDGPU"
+	echo "2. Radeon"
+	echo "3. Intel"
+	echo "4. Test"
+	echo "0. Back"
+	echo
+	echo "Choice:"
+	
+	read gpu
+	case $gpu in
+	
+		# AMDGPU
+		1)
+			pkg install -y drm-kmod
+			echo "# Enables AMDGPU" >> $rc
+			echo 'kld_list="amdgpu"' >> $rc
+			$tad >> $log
+			echo "Installed AMDGPU" >> $log
+			
+			# Disable hw.syscons if UEFI
+			if [ -d /boot/efi/ ];
+			then
+				echo "hw.syscons.disable=1" >> $bootcfg
+			fi
+			clear
+			echo "Graphics drivers installed"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			graphics
+			;;
+		
+		# Radeon
+		2)
+			pkg install -y drm-kmod
+			echo "# Enables Radeon Driver" >> $rc
+			echo 'kld_list="radeon"' >> $rc
+			$tad >> $log
+			echo "Installed Radeon" >> $log
+			
+			# Disable hw.syscons if UEFI
+			if [ -d /boot/efi/ ];
+			then
+				echo "hw.syscons.disable=1" >> $bootcfg
+			fi
+			clear
+			echo "Graphics drivers installed"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			graphics
+			;;
+			
+		# Intel
+		3)
+			pkg install -y drm-kmod
+			echo "# Enables Intel Driver" >> $rc
+			echo 'kld_list="intel"' >> $rc
+			clear
+			echo "Graphics drivers installed"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			graphics
+			;;
+			
+		# Back to main menu
+		0)
+			main
+			;;
+			
+		*)
+			echo "Invalid choice!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			graphics	
+			;;
+	esac
+}
+
+# X.Org & DE/WM
+desktop() {
+		
+	# Add user to video group
+	echo "Enter the name of the user that will be using X.Org:"
+	read acc
+	pw group mod video -m $acc
+	
+	# Install X.Org
+	pkg install -y xorg
+	
+	xinitrc=/home/$acc/.xinitrc
+	
+	# Menu
+	clear
+	echo "Select Desktop Enviroment/Window Manager:"
+	echo "1. XFCE + LightDM"
+	echo "2. MATE + LightDM"
+	echo "3. Plasma + SDDM"
+	echo "4. Openbox (No Display Manager"
+	echo "5. Window Maker (No Display Manager"
+	echo "0. Back"
+	echo
+	echo "Choice:"
+	
+	read de
+	case $de in
+		
+		# XFCE + LightDM
+		1)
+			pkg install -y xfce xfce4-goodies lightdm lightdm-gtk-greeter
+			if ! grep -Fxq "# LightDM & XFCE" $rc;
+			then
+				echo "# LightDM & XFCE" >> $rc
+			fi
+			clear
+			echo "XFCE + LightDM installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			desktop
+			;;
+			
+		# MATE + LightDM
+		2)
+			pkg install -y mate-desktop mate lightdm lightdm-gtk-greeter
+			if ! grep -Fxq "# LightDM & MATE" $rc;
+			then
+				echo "# LightDM & MATE" >> $rc
+			fi
+			clear
+			echo "MATE + LightDM Display Manager installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			;;
+			
+		# Plasma + SDDM
+		3)
+			pkg install -y x11/kde5 sddm
+			if ! grep -Fxq "# SDDM & Plasma" $rc;
+			then
+				echo "# SDDM & Plasma" >> $rc
+			fi
+			clear
+			echo "Plasma + SDDM installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			;;
+		
+		# Openbox
+		4) 	
+			pkg install -y openbox obconf menumaker htop pcmanfm
+			
+			if ! grep -Fxq "exec openbox-session" $xinitrc
+			then
+				echo "exec openbox-session" >> $xinitrc
+			fi
+			chown $acc $xinitrc
+			clear
+			echo "Openbox installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			;;
+			
+		# Window Maker
+		5)
+			pkg install -y windowmaker wmakerconf
+			
+			if ! grep -Fxq "exec wmaker" $xinitrc
+			then
+				echo "exec wmaker" >> $xinitrc
+				chown $acc $xinitrc
+			fi
+			clear
+			echo "Window Maker installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			;;
+		
+		# Back to main menu
+		0)
+			main
+			;;
+			
+		*)
+			echo "Invalid choice!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			desktop
+			;;
+	esac
+	
+	# Checks if vasrious things are enabled in $rc, $fstab, etc.
+	
+	# XFCE, MATE and Plasma
+	if [ $de == 1 ]  || [ $de == 2 ] || [ $de = 3 ];
+	then	
+		if ! grep -Fxq 'dbus_enable="YES"' $rc; 
+		then
+			echo 'dbus_enable="YES"' >> $rc
+		fi
+		
+		if ! grep -Fxq 'hald_enable="YES"' $rc;
+		then
+				echo 'hald_enable="YES"' >> $rc
+		fi
+	fi
+	
+	# XFCE and MATE
+	if [ $de == 1 ] || [ $de == 2 ];
+	then
+		if ! grep -Fxq 'lightdm_enable="YES"' $rc;
+		then
+			echo 'lightdm_enable="YES"' >> $rc
+		fi
+	fi
+	
+	# Plasma and MATE
+	if [ $de == 2 ] || [ $de == 3 ];
+	then
+		if ! grep -Fxq "proc /proc procfs rw 0 0" $fstab;
+		then
+			echo "proc /proc procfs rw 0 0" >> $fstab
+		fi
+	fi
+	
+	desktop
+}
+
+audio() {
+	
+	# Installs OSS
+	pkg install -y oss
+	
+	# Enables OSS
+	if ! grep -Fxq 'oss_enable="YES"' $rc;
+	then
+		echo 'oss_enable="YES"' >> $rc
+	fi
+	
+	# Audio menu
+	clear
+	echo "Select Audio Mixer:"
+	echo "1. mixertui (ncurses)"
+	echo "2. dsbmixer (QT)"
+	echo "3. GVolWheel (Panel Applet)"
+	echo "0. Back"
+	echo
+	echo "Choice:"
+	
+	read sound
+	case $sound in
+		
+		# mixertui
+		1)
+			pkg install -y mixertui
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			audio
+			;;
+
+		# dsbmixer
+		2)		
+			pkg install -y dsbmixer
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			audio
+			;;
+		
+		# GVolWheel
+		3)	
+			pkg install -y gvolwheel
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			audio
+			;;
+			
+		# Back to main menu
+		0)
+			main
+			;;
+			
+		*)
+			echo "Invalid choice!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			audio
+			;;
+	esac
+}
+
+programs() {
+	
+	# Menu
+	clear
+	echo "Select programs to install:"
+	echo
+	echo "Text Editors/ IDEs"
+	echo "1. nano					4. Geany + Plugins"	
+	echo "2. Vim					5. Code::Blocks"
+	echo "3. Vim COnsole				6. Visual Studio Code"
+	echo
+	echo "Graphics"
+	echo "11. GIMP				14. Inkscape"
+	echo "12. Darktable				15. Blender"
+	echo "13. Krita"
+	echo
+	echo "Internet"
+	echo "21. Firefox				24. Hexchat"
+	echo "22. Chromium"
+	echo "23. Thunderbird"
+	echo
+	echo "Office"
+	echo "31. LibreOffice"
+	echo
+	echo "0. Back"
+	echo
+	echo "Choice:"
+	
+	read prgrms
+	case $prgrms in
+		
+		# nano
+		1)
+			pkg install -y nano
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+		
+		# Vim
+		2)
+			pkg install -y vim
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Vim Console
+		3)
+			pkg install -y vim-console
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Geany + Plugins
+		4)
+			pkg install -y geany geany-plugins
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Code::Blocks
+		5)
+			pkg install y- codeblocks
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Visual Studio Code
+		6)
+			pkg install -y vscode
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# GIMP
+		11)
+			pkg install -y gimp
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Darktable
+		12)
+			pkg install -y darktable
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Krita
+		13)
+			pkg install -y krita
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Inkscape
+		14)
+			pkg install -y inkscape
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Blender
+		15)
+			pkg install -y blender
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Firefox
+		21)
+			pkg install -y firefox
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Chromium
+		22)
+			pkg install -y chromium
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Thunderbird
+		23)
+			pkg install -y thunderbird
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# HexChat
+		24)
+			pkg install -y hexchat
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		#LibreOffice
+		31)
+			pkg install -y libreoffice
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+			
+		# Back
+		0)
+			main
+			;;
+			
+		*)
+			echo "Invalid choice!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			programs
+			;;
+	esac
+}
+
+stutter() {
+	
+	# Fixes stiuttering for high thread count Ryzen CPUs
+	echo "# Fixes stuttering on high thread count Ryzen CPUs" >> $sysctl
+	echo "kern.sched.steal_thresh=1" > $sysctl
+	clear
+	echo "Stutter fixed!"
+	echo "Press [ENTER] to continue."
+	read -r REPLY 
+	main
+}
+
+compat() {
+	
+	if [ $(uname -p) = "amd64" ];
+	then
+		kldload linux
+		kldload linux64
+		pkg install emulators/linux_base-c7
+	
+		if ! grep -Fxq 'linux_enable="YES"' $rc;
+		then
+			echo 'linux_enable="YES"' >> $rc
+		fi
+	
+		if ! grep -Fxq '"linprocfs   /compat/linux/proc  linprocfs       rw              0       0"' $fstab;
+		then
+			echo "linprocfs   /compat/linux/proc  linprocfs       rw              0       0" >> $fstab
+		fi
+	
+		if ! grep -Fxq "linsysfs    /compat/linux/sys   linsysfs        rw              0       0" $fstab;
+		then
+			echo "linsysfs    /compat/linux/sys   linsysfs        rw              0       0" >> $fstab
+		fi
+	
+		if ! grep -Fxq "tmpfs    /compat/linux/dev/shm  tmpfs   rw,mode=1777            0       0" $fstab;
+		then
+			echo "tmpfs    /compat/linux/dev/shm  tmpfs   rw,mode=1777            0       0" >> $fstab
+		fi
+	
+		clear
+		echo "Finished setting up Linux compatability. A reboot is required to fully apply changes."
+		echo "Press [ENTER] to continue."
+		read -r REPLY 
+		main
+	elif [ $(uname -p) = "i386" ];
+	then
+		kldload linux
+		pkg install emulators/linux_base-c7
+	
+		if ! grep -Fxq 'linux_enable="YES"' $rc;
+		then
+			echo 'linux_enable="YES"' >> $rc
+		fi
+
+		if ! grep -Fxq '"linprocfs   /compat/linux/proc  linprocfs       rw              0       0"' $fstab;
+		then
+			echo "linprocfs   /compat/linux/proc  linprocfs       rw              0       0" >> $fstab
+		fi
+	
+		if ! grep -Fxq "linsysfs    /compat/linux/sys   linsysfs        rw              0       0" $fstab;
+		then
+			echo "linsysfs    /compat/linux/sys   linsysfs        rw              0       0" >> $fstab
+		fi
+	
+		if ! grep -Fxq "tmpfs    /compat/linux/dev/shm  tmpfs   rw,mode=1777            0       0" $fstab;
+		then
+			echo "tmpfs    /compat/linux/dev/shm  tmpfs   rw,mode=1777            0       0" >> $fstab
+		fi
+	
+		clear
+		echo "Finished setting up Linux compatability. A reboot is required to fully apply changes."
+		echo "Press [ENTER] to continue."
+		read -r REPLY 
+		main
+	else
+		echo "Unsupported architecture"
+		exit 1
+	fi
+}
+
+# Check if root
+if [ $(id -u) != 0 ];
+then
+	echo "Must be run as root!"
+	exit 1
+fi
+
+# Delete old template if it exists
+#if [ ! -f $template]
+#then
+#	rm -rf $template
+#fi
+
+# Create new template file
+#f [ ! -d /usr/local/share/quicced ];
+#then
+#	mkdir /usr/local/share/quicced
+#	touch $template
+#else
+#	touch $ template
+#fi
+
+# Update FreeBSD system
+#freebsd-update fetch install
+
+# Bootstrap package manager
+#pkg bootstrap
+
+# Update repositories & packages
+#pkg update
+#pkg upgrade -y
+
+# Check architecture
+if [ $(uname -p) = "i386" ];
+then
+	main
+elif [ $(uname -p) = "amd64" ];
+then
+	main
+else
+	echo "Only i386 & amd64 are supported!"
+	exit 1
+fi
