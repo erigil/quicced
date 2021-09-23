@@ -27,10 +27,11 @@ Experimental Features is a section in the main menu where features/options go if
 - Jail deployment
 - Server software
 - Template system
+- Additional DEs/WMs
+- Kernel tuning
 
 ## Known Bugs
 - KDE Plasma crashes in VirtualBox (KDE Plasma specific, but still useful info.)
-- Linux Compatibility may cause issues if run more than once.
 - WPrefs fails to launch in Window Maker (Window Maker specific, but still useful info.) **Workaround: execute the following in the terminal to launch it**\
 `/usr/local/GNUstep//Applications/WPrefs.app/WPrefs`
 
