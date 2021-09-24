@@ -20,7 +20,7 @@ What started out as a small script for me to quickly configure a FreeBSD system 
 - Enable Linux Compatibility
 
 ## About Experimental Features
-Experimental Features is a section in the main menu where features/options go if they aren't fully working.
+Experimental Features is a section in the main menu where features/options go if they aren't fully working or contain some bugs that I know about and haven/t fixed yet.
 
 ## Planned Features
 - NVIDIA drivers
