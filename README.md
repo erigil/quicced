@@ -7,7 +7,7 @@ quicced is still in *VERY* early alpha stages. Unexpected breaks, bugs, glitches
 Radeon and Intel graphics drivers are untested as I do not have a computer with that hardware readily availible. However they **SHOULD** work.
 
 ## About
-What started out as a small script for me to quickly configure a FreeBSD system is now turning into a large project. It's mostly functional; with bugs of course.
+What started out as a small script for me to quickly configure a FreeBSD system is now turning into a large project.
 
 ## Features
 - Install and configure graphics drivers
