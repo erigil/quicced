@@ -7,7 +7,7 @@ quicced is still in *VERY* early alpha stages. Unexpected breaks, bugs, glitches
 Radeon and Intel graphics drivers are untested as I do not have a computer with that hardware readily availible. However they **SHOULD** work.
 
 ## About
-What started out as a small script for me to quickly configure a FreeBSD system is now turning into a large project.
+What started out as a small script for me to quickly configure a FreeBSD system is now turning into a large project. quicced is a simple-to-use menu-based script that allows you to to intsall and configure various programs, drivers, etc. The evntual goal is to create something that will allow people to create "templates" after they finish running the script. These templates will be small scripts that contain all the options you selected so you can setup an identical system easily without having to go through the menus again.
 
 ## Features
 - Install and configure graphics drivers
