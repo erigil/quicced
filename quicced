@@ -8,9 +8,7 @@ sysctl=/etc/sysctl.conf
 
 # Main Menu
 main() {
-	clear
-	echo "Main menu initialized" >> $log
-			
+	clear			
 	echo "--------------"
 	echo "quicced-0.1.0"
 	echo "--------------"
