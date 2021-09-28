@@ -1,17 +1,10 @@
 #!/bin/sh
 
-# quicced-0.1.0
-# A tool for quickly configuring up a FreeBSD system
-
-# Run the following to enable logging
-# quicced.sh 2>&1 | tee -a quicced.log
-
 # Variables
 rc=/etc/rc.conf
 bootcfg=/boot/loader.conf
 fstab=/etc/fstab
 sysctl=/etc/sysctl.conf
-#template = ./usr/local/share/quicced-config/custom-quicced-template
 
 # Main Menu
 main() {
@@ -131,8 +124,6 @@ graphics() {
 			pkg install -y drm-kmod
 			echo "# Enables AMDGPU" >> $rc
 			echo 'kld_list="amdgpu"' >> $rc
-			$tad >> $log
-			echo "Installed AMDGPU" >> $log
 			
 			# Disable hw.syscons if UEFI
 			if [ -d /boot/efi/ ];
@@ -151,8 +142,6 @@ graphics() {
 			pkg install -y drm-kmod
 			echo "# Enables Radeon Driver" >> $rc
 			echo 'kld_list="radeon"' >> $rc
-			$tad >> $log
-			echo "Installed Radeon" >> $log
 			
 			# Disable hw.syscons if UEFI
 			if [ -d /boot/efi/ ];
@@ -697,31 +686,6 @@ then
 	echo "Must be run as root!"
 	exit 1
 fi
-
-# Delete old template if it exists
-#if [ ! -f $template]
-#then
-#	rm -rf $template
-#fi
-
-# Create new template file
-#f [ ! -d /usr/local/share/quicced ];
-#then
-#	mkdir /usr/local/share/quicced
-#	touch $template
-#else
-#	touch $ template
-#fi
-
-# Update FreeBSD system
-#freebsd-update fetch install
-
-# Bootstrap package manager
-#pkg bootstrap
-
-# Update repositories & packages
-#pkg update
-#pkg upgrade -y
 
 # Check architecture
 if [ $(uname -p) = "i386" ];
