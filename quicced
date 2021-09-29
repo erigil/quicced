@@ -1,14 +1,24 @@
 #!/bin/sh
 
+# quicced-0.1.0
+# A tool for quickly configuring up a FreeBSD system
+
+# Run the following to enable logging
+# quicced.sh 2>&1 | tee -a quicced.log
+
 # Variables
 rc=/etc/rc.conf
 bootcfg=/boot/loader.conf
+xinitrc=/home/$acc/.xinitrc
 fstab=/etc/fstab
 sysctl=/etc/sysctl.conf
+jailrc=/etc/jail.conf
+template=output
+custom=quicced-template
 
 # Main Menu
 main() {
-	clear			
+	clear	
 	echo "--------------"
 	echo "quicced-0.1.0"
 	echo "--------------"
@@ -18,13 +28,14 @@ main() {
 	echo "2. Graphics Drivers"
 	echo "3. X.Org & Desktop"
 	echo "4. Audio"
-	echo "5. Additional Programs"
+	echo "5. Desktop Applixcations"
+	echo "6. Server Software"
 	echo 
 	echo "Hardware Specific:"
 	echo  "11. Fix Stuttering (Ryzen CPUs)"
 	echo
-	echo "Experimental"
-	echo "21. Linux Compatability"
+	echo "Linux Compatability"
+	echo "21. Enable Linux Compatability"
 	echo
 	echo "0. Quit"
 	echo
@@ -58,7 +69,7 @@ main() {
 			;;
 		
 		# Audio
-		4
+		4)
 			clear
 			audio
 			;;
@@ -68,14 +79,18 @@ main() {
 			clear
 			programs
 			;;
+			
+		# Server
+		6)
+			clear
+			server
+			;;
 		
 		# Fix stutter
 		11)
 			clear
 			stutter
 			;;
-		
-		# Experimental features
 		
 		# Linux Compatability
 		21)
@@ -85,10 +100,15 @@ main() {
 			
 		# Quit
 		0)
+			
+			# Remove duplicate lines from template
+			awk '!visited[$0]++' $template > $custom
+			rm -rf $template
 			clear
 			echo "###################################################################"
 			echo "#                                                                 #"
 			echo "# Some changes may require you to reboot for them to take effect. #"
+			echo "# Make sure you look over the temaple before running it.          #"
 			echo "#                                                                 #"
 			echo "###################################################################"
 			exit 0
@@ -120,31 +140,36 @@ graphics() {
 		# AMDGPU
 		1)
 			pkg install -y drm-kmod
-			echo "# Enables AMDGPU" >> $rc
-			echo 'kld_list="amdgpu"' >> $rc
+			echo "pkg install -y drm-kmod" >> $template
+			echo 'echo "kld_list="amdgpu" >> $rc' >> $template
+			echo 'kld_list="amdgpu" >> $rc' >> $rc
 			
 			# Disable hw.syscons if UEFI
 			if [ -d /boot/efi/ ];
 			then
 				echo "hw.syscons.disable=1" >> $bootcfg
+				echo 'echo "hw.syscons.disable=1" >> $bootcfg' >> $template
 			fi
 			clear
 			echo "Graphics drivers installed"
 			echo "Press [ENTER] to continue."
 			read -r REPLY 
 			graphics
+
 			;;
 		
 		# Radeon
 		2)
 			pkg install -y drm-kmod
-			echo "# Enables Radeon Driver" >> $rc
+			echo "pkg install -y drm-kmod" >> $template
+			echo 'echo "kld_list="radeon"' >> $template
 			echo 'kld_list="radeon"' >> $rc
 			
 			# Disable hw.syscons if UEFI
 			if [ -d /boot/efi/ ];
 			then
 				echo "hw.syscons.disable=1" >> $bootcfg
+				echo 'echo "hw.syscons.disable=1" >> $bootcfg' >> $template
 			fi
 			clear
 			echo "Graphics drivers installed"
@@ -156,7 +181,8 @@ graphics() {
 		# Intel
 		3)
 			pkg install -y drm-kmod
-			echo "# Enables Intel Driver" >> $rc
+			echo "pkg install -y drm-kmod" >> $template
+			echo 'echo "kld_list="intel" >> $rc' >> $template
 			echo 'kld_list="intel"' >> $rc
 			clear
 			echo "Graphics drivers installed"
@@ -186,11 +212,7 @@ desktop() {
 	echo "Enter the name of the user that will be using X.Org:"
 	read acc
 	pw group mod video -m $acc
-	
-	# Install X.Org
-	pkg install -y xorg
-	
-	xinitrc=/home/$acc/.xinitrc
+	echo "pw group mod video -m $acc" >> $template
 	
 	# Menu
 	clear
@@ -209,7 +231,8 @@ desktop() {
 		
 		# XFCE + LightDM
 		1)
-			pkg install -y xfce xfce4-goodies lightdm lightdm-gtk-greeter
+			pkg install -y xorg xfce xfce4-goodies lightdm lightdm-gtk-greeter
+			echo "pkg install -y xorg xfce xfce4-goodies lightdm lightdm-gtk-greeter" >> $template
 			if ! grep -Fxq "# LightDM & XFCE" $rc;
 			then
 				echo "# LightDM & XFCE" >> $rc
@@ -223,7 +246,8 @@ desktop() {
 			
 		# MATE + LightDM
 		2)
-			pkg install -y mate-desktop mate lightdm lightdm-gtk-greeter
+			pkg install -y  xorg mate-desktop mate lightdm lightdm-gtk-greeter
+			echo "pkg install -y xorg mate-desktop mate lightdm lightdm-gtk-greeter" >> $template
 			if ! grep -Fxq "# LightDM & MATE" $rc;
 			then
 				echo "# LightDM & MATE" >> $rc
@@ -236,7 +260,8 @@ desktop() {
 			
 		# Plasma + SDDM
 		3)
-			pkg install -y x11/kde5 sddm
+			pkg install -y xorg x11/kde5 sddm
+			echo "pkg install -y xorg x11/kde5 sddm" >> $template
 			if ! grep -Fxq "# SDDM & Plasma" $rc;
 			then
 				echo "# SDDM & Plasma" >> $rc
@@ -249,13 +274,17 @@ desktop() {
 		
 		# Openbox
 		4) 	
-			pkg install -y openbox obconf menumaker htop pcmanfm
+			pkg install -y xorg openbox obconf menumaker htop pcmanfm
+			echo "pkg install -y xorg openbox obconf menumaker htop pcmanfm" >> $template
+			echo 'echo "exec openbox-session" >> $xinitrc' >> $template
+			echo "chown $acc $xinitrc" >> $template
 			
 			if ! grep -Fxq "exec openbox-session" $xinitrc
 			then
 				echo "exec openbox-session" >> $xinitrc
+				chown $acc $xinitrc
 			fi
-			chown $acc $xinitrc
+
 			clear
 			echo "Openbox installed!"
 			echo "Press [ENTER] to continue."
@@ -264,7 +293,10 @@ desktop() {
 			
 		# Window Maker
 		5)
-			pkg install -y windowmaker wmakerconf
+			pkg install -y xorg windowmaker wmakerconf
+			echo "pkg install -y xorg windowmaker wmakerconf" >> $template
+			echo 'echo "exec wmaker" >> $xinitrc' >> $template
+			echo "chown $acc $xinitrc" >> $template
 			
 			if ! grep -Fxq "exec wmaker" $xinitrc
 			then
@@ -294,7 +326,10 @@ desktop() {
 	
 	# XFCE, MATE and Plasma
 	if [ $de == 1 ]  || [ $de == 2 ] || [ $de = 3 ];
-	then	
+	then
+		echo 'echo "dbus_enable="YES"" >> $rc' >> $template
+		echo 'echo "hald_enable="YES"" >> $rc' >> $template
+		
 		if ! grep -Fxq 'dbus_enable="YES"' $rc; 
 		then
 			echo 'dbus_enable="YES"' >> $rc
@@ -309,6 +344,8 @@ desktop() {
 	# XFCE and MATE
 	if [ $de == 1 ] || [ $de == 2 ];
 	then
+		echo 'echo "lightdm_enable="YES"" >> $rc' >> $template
+		
 		if ! grep -Fxq 'lightdm_enable="YES"' $rc;
 		then
 			echo 'lightdm_enable="YES"' >> $rc
@@ -318,6 +355,8 @@ desktop() {
 	# Plasma and MATE
 	if [ $de == 2 ] || [ $de == 3 ];
 	then
+		echo 'echo "proc /proc procfs rw 0 0" >> $fstab' >> $template
+		
 		if ! grep -Fxq "proc /proc procfs rw 0 0" $fstab;
 		then
 			echo "proc /proc procfs rw 0 0" >> $fstab
@@ -331,8 +370,11 @@ audio() {
 	
 	# Installs OSS
 	pkg install -y oss
+	echo "pkg install -y oss" >> $template
 	
 	# Enables OSS
+	echo 'echo "oss_enable="YES"" >> $rc' >> $template
+	
 	if ! grep -Fxq 'oss_enable="YES"' $rc;
 	then
 		echo 'oss_enable="YES"' >> $rc
@@ -354,6 +396,7 @@ audio() {
 		# mixertui
 		1)
 			pkg install -y mixertui
+			echo "pkg install -y mixertui" >> $template
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
 			read -r REPLY 
@@ -363,6 +406,7 @@ audio() {
 		# dsbmixer
 		2)		
 			pkg install -y dsbmixer
+			echo "pkg install -y dsbmixer" >> $template
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
 			read -r REPLY 
@@ -372,6 +416,7 @@ audio() {
 		# GVolWheel
 		3)	
 			pkg install -y gvolwheel
+			echo "pkg install -y gvolwheel" >> $template
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
 			read -r REPLY 
@@ -396,7 +441,7 @@ programs() {
 	
 	# Menu
 	clear
-	echo "Select programs to install:"
+	echo "Select applications to install:"
 	echo
 	echo "Text Editors/ IDEs"
 	echo "1. nano					4. Geany + Plugins"	
@@ -426,6 +471,7 @@ programs() {
 		# nano
 		1)
 			pkg install -y nano
+			echo "pkg install -y nano" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -436,6 +482,7 @@ programs() {
 		# Vim
 		2)
 			pkg install -y vim
+			echo "pkg install -y vim" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -446,6 +493,7 @@ programs() {
 		# Vim Console
 		3)
 			pkg install -y vim-console
+			echo "pkg install -y vim-console" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -456,6 +504,7 @@ programs() {
 		# Geany + Plugins
 		4)
 			pkg install -y geany geany-plugins
+			echo "pkg install -y geany geany-plugins" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -466,6 +515,7 @@ programs() {
 		# Code::Blocks
 		5)
 			pkg install y- codeblocks
+			echo "pkg install y- codeblocks" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -476,6 +526,7 @@ programs() {
 		# Visual Studio Code
 		6)
 			pkg install -y vscode
+			echo "pkg install -y vscode" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -486,6 +537,7 @@ programs() {
 		# GIMP
 		11)
 			pkg install -y gimp
+			echo "pkg install -y gimp" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -496,6 +548,7 @@ programs() {
 		# Darktable
 		12)
 			pkg install -y darktable
+			echo "pkg install -y darktable" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -506,6 +559,7 @@ programs() {
 		# Krita
 		13)
 			pkg install -y krita
+			echo "pkg install -y krita" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -516,6 +570,7 @@ programs() {
 		# Inkscape
 		14)
 			pkg install -y inkscape
+			echo "pkg install -y inkscape" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -526,6 +581,7 @@ programs() {
 		# Blender
 		15)
 			pkg install -y blender
+			echo "pkg install -y blender" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -536,6 +592,7 @@ programs() {
 		# Firefox
 		21)
 			pkg install -y firefox
+			echo "pkg install -y firefox" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -546,6 +603,7 @@ programs() {
 		# Chromium
 		22)
 			pkg install -y chromium
+			echo "pkg install -y chromium" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -556,6 +614,7 @@ programs() {
 		# Thunderbird
 		23)
 			pkg install -y thunderbird
+			echo "pkg install -y thunderbird" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -566,6 +625,7 @@ programs() {
 		# HexChat
 		24)
 			pkg install -y hexchat
+			echo "pkg install -y hexchat" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -576,6 +636,7 @@ programs() {
 		#LibreOffice
 		31)
 			pkg install -y libreoffice
+			echo "pkg install -y libreoffice" >> $template
 			clear
 			echo "Package(s) installed!"
 			echo "Press [ENTER] to continue."
@@ -597,11 +658,63 @@ programs() {
 	esac
 }
 
+server() {
+	clear
+	echo "Select Server/Networking software to install:"
+	echo
+	echo "Server"
+	echo "1. FAMP Stack (Apache, MariaDB, PHP)"
+	echo "2. Secure MariaDB (Optional)"
+	echo "0. Back"
+	echo
+	echo "Choice:"
+	
+	read serv
+	case $serv in
+		# FAMP
+		1)
+			pkgs install apache24 mariadb105-client maraiadb105-server pkg install php74
+			echo "pkgs install apache24 mariadb105-client maraiadb105-server pkg install php74" >> $template
+			echo 'apache24_enable="YES"' >> $rc
+			echo 'echo "apache24_enable="YES"" >> $rc' >> $template
+			echo 'mysql_enable="YES"' >> $rc
+			echo 'echo "mysql_enable="YES"" >> $rc' >> $template
+			clear
+			echo "Package(s) installed!"
+			echo "Press [ENTER] to continue."
+			server
+			;;
+		
+		# Sevure MariaDB	
+		2)
+			mysql_secure_installation
+			echo "mysql_secure_installation" >> $template
+			clear
+			echo "MariaDB Secured!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			server
+			;;
+			
+		0)
+			main
+			;;
+			
+		*)
+			echo "Invalid choice!"
+			echo "Press [ENTER] to continue."
+			read -r REPLY 
+			server
+			;;
+	esac
+}
+
 stutter() {
 	
 	# Fixes stiuttering for high thread count Ryzen CPUs
 	echo "# Fixes stuttering on high thread count Ryzen CPUs" >> $sysctl
 	echo "kern.sched.steal_thresh=1" >> $sysctl
+	echo 'echo "kern.sched.steal_thresh=1" >> $sysctl' >> $template
 	clear
 	echo "Stutter fixed!"
 	echo "Press [ENTER] to continue."
@@ -613,6 +726,14 @@ compat() {
 	
 	if [ $(uname -p) = "amd64" ];
 	then
+		echo "kldload linux" >> $template
+		echo "kldload linux64" >> $template
+		echo "pkg install emulators/linux_base-c7" >> $template
+		echo 'echo "linux_enable="YES"" >> $rc' >> $template
+		echo 'echo "linprocfs   /compat/linux/proc  linprocfs       rw              0       0" >> $fstab' >> $template
+		echo 'echo "linsysfs    /compat/linux/sys   linsysfs        rw              0       0" >> $fstab' >> $template
+		echo 'echo "tmpfs    /compat/linux/dev/shm  tmpfs   rw,mode=1777            0       0" >> $fstab' >> $template
+		
 		kldload linux
 		kldload linux64
 		pkg install emulators/linux_base-c7
@@ -644,6 +765,13 @@ compat() {
 		main
 	elif [ $(uname -p) = "i386" ];
 	then
+		echo "kldload linux" >> $template
+		echo "pkg install emulators/linux_base-c7" >> $template
+		echo 'echo "linux_enable="YES"" >> $rc' >> $template
+		echo 'echo "linprocfs   /compat/linux/proc  linprocfs       rw              0       0" >> $fstab' >> $template
+		echo 'echo "linsysfs    /compat/linux/sys   linsysfs        rw              0       0" >> $fstab' >> $template
+		echo 'echo "tmpfs    /compat/linux/dev/shm  tmpfs   rw,mode=1777            0       0" >> $fstab' >> $template
+
 		kldload linux
 		pkg install emulators/linux_base-c7
 	
@@ -684,6 +812,36 @@ then
 	echo "Must be run as root!"
 	exit 1
 fi
+
+
+# Delete old template if it exists
+if [ ! -f $template]
+then
+	rm -rf $template
+fi
+
+if [ ! -f $custom]
+then
+	rm -rf $custom
+fi
+
+# Create new template file
+touch $template
+echo "#!/bin/sh" >> $template
+echo >> $template
+echo "# Variables" >> $template
+echo "rc=/etc/rc.conf" >> $template
+echo "bootcfg=/boot/loader.conf" >> $template
+echo "xinitrc=/home/$acc/.xinitrc" >> $template
+echo "fstab=/etc/fstab" >> $template
+echo "sysctl=/etc/sysctl.conf" >> $template
+echo "jailrc=/etc/jail.conf" >> $template
+echo >> $template
+echo "# Commands and others" >> $template
+echo "freebsd-update fetch install" >> $template
+echo "pkg boostrap" >> $template
+echo "pkg update" >> $template
+echo "pkg upgrade -y" >> $template
 
 # Check architecture
 if [ $(uname -p) = "i386" ];
