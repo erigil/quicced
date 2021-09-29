@@ -601,7 +601,7 @@ stutter() {
 	
 	# Fixes stiuttering for high thread count Ryzen CPUs
 	echo "# Fixes stuttering on high thread count Ryzen CPUs" >> $sysctl
-	echo "kern.sched.steal_thresh=1" > $sysctl
+	echo "kern.sched.steal_thresh=1" >> $sysctl
 	clear
 	echo "Stutter fixed!"
 	echo "Press [ENTER] to continue."
