@@ -17,14 +17,8 @@ What started out as a small script for me to quickly configure a FreeBSD system 
 - Applies workarounds to various bugs
 - Basic template system (Shell script that saves your choices so you can apply the same changes/configurations to another system.)
 
-## Experimental Features
-- Enable Linux Compatibility
-
-## About Experimental Features
-Experimental Features is a section in the main menu where features/options go if they aren't fully working or contain some bugs that I know about and haven/t fixed yet.
-
 ## About unstable Branch
-Mostly bleeding edge features not yet stable. Expect bugs
+New features, not fully tested.
 
 ## Planned Features
 - NVIDIA drivers
