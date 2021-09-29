@@ -22,8 +22,8 @@ What started out as a small script for me to quickly configure a FreeBSD system 
 ## About Experimental Features
 Experimental Features is a section in the main menu where features/options go if they aren't fully working or contain some bugs that I know about and haven/t fixed yet.
 
-## About Testing Branch
-Mostly bleeding edge features not yet stable.
+## About unstable Branch
+Mostly bleeding edge features not yet stable. Expect bugs
 
 ## Planned Features
 - NVIDIA drivers
