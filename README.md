@@ -15,6 +15,7 @@ What started out as a small script for me to quickly configure a FreeBSD system 
 - Install OSS and audio mixers
 - Install misc. software such as web browsers, office software, text editors, etc.
 - Applies workarounds to various bugs
+- Basic template system (Shell script that saves your choices so you can apply the same changes/configurations to another system.)
 
 ## Experimental Features
 - Enable Linux Compatibility
@@ -30,7 +31,6 @@ Mostly bleeding edge features not yet stable. Expect bugs
 - VirtualBox drivers
 - Jail deployment
 - Server software
-- Template system
 - Additional DEs/WMs
 - Kernel tuning
 
