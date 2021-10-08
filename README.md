@@ -15,12 +15,7 @@ What started out as a small script for me to quickly configure a FreeBSD system 
 - Install OSS and audio mixers
 - Install misc. software such as web browsers, office software, text editors, etc.
 - Applies workarounds to various bugs
-
-## Experimental Features
-- Enable Linux Compatibility
-
-## About Experimental Features
-Experimental Features is a section in the main menu where features/options go if they aren't fully working or contain some bugs that I know about and haven/t fixed yet.
+- Basic template system (Shell script that saves your choices so you can apply the same changes/configurations to another system.)
 
 ## About unstable Branch
 New features, not fully tested.
@@ -30,7 +25,6 @@ New features, not fully tested.
 - VirtualBox drivers
 - Jail deployment
 - Server software
-- Template system
 - Additional DEs/WMs
 - Kernel tuning
 

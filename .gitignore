@@ -2,3 +2,5 @@
 **/logs
 *.log
 *.bak
+*output
+*quicced-template
