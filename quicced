@@ -56,6 +56,7 @@ main() {
 			echo "System updated!"
 			echo "Press [ENTER] to continue."
 			read -r REPLY 
+			main
 			;;
 			
 		# GPU drivers
