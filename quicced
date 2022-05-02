@@ -1,7 +1,6 @@
 #!/bin/sh
 
-# quicced-0.1.0
-# A tool for quickly configuring up a FreeBSD system
+# quicced-0.1.1
 
 # Run the following to enable logging
 # quicced.sh 2>&1 | tee -a quicced.log
