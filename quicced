@@ -17,7 +17,6 @@ template=/tmp/output
 custom=/tmp/quicced-template
 
 # Cleanup files and variables on error
-
 trap "cleanup" 1 2 3 6
 
 cleanup() {
