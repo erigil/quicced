@@ -16,7 +16,23 @@ jailrc=/etc/jail.conf
 template=/tmp/output
 custom=/tmp/quicced-template
 
-trap error 1 2 3 6
+# Cleanup files and variables on error
+
+trap "cleanup" 1 2 3 6
+
+cleanup() {
+	echo "Error: Something went wrong, quitting..."
+	rm -rf $template
+	unset $rc
+	unset $bootcfg
+	unset $xinitrc
+	unset $fstab
+	unset $sysctl
+	unset $jailrc
+	unset $template
+	unset $custom
+	exit 1
+}
 
 # Main Menu
 main() {
@@ -166,7 +182,6 @@ graphics() {
 			echo "Press [ENTER] to continue."
 			read -r REPLY 
 			graphics
-
 			;;
 		
 		# Radeon
@@ -815,22 +830,6 @@ compat() {
 		echo "Unsupported architecture"
 		exit 1
 	fi
-}
-
-# Cleanup files and variables
-error() {
-	echo "Error: Something went wrong, quitting..."
-	rm -rf $template
-	unset $rc
-	unset $bootcfg
-	unset $xinitrc
-	unset $fstab
-	unset $sysctl
-	unset $jailrc
-	unset $template
-	unset $custom
-	echo "Done!"
-	exit 1
 }
 
 # Check if root
