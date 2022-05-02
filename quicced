@@ -6,15 +6,32 @@
 # Run the following to enable logging
 # quicced.sh 2>&1 | tee -a quicced.log
 
-# Variables
+# Various files
 rc=/etc/rc.conf
 bootcfg=/boot/loader.conf
 xinitrc=/home/$acc/.xinitrc
 fstab=/etc/fstab
 sysctl=/etc/sysctl.conf
 jailrc=/etc/jail.conf
-template=output
-custom=quicced-template
+template=/tmp/output
+custom=/tmp/quicced-template
+
+# Cleanup files and variables on error
+trap "cleanup" 1 2 3 6
+
+cleanup() {
+	echo "Error: Something went wrong, quitting..."
+	rm -rf $template
+	unset $rc
+	unset $bootcfg
+	unset $xinitrc
+	unset $fstab
+	unset $sysctl
+	unset $jailrc
+	unset $template
+	unset $custom
+	exit 1
+}
 
 # Main Menu
 main() {
@@ -54,6 +71,7 @@ main() {
 			echo "System updated!"
 			echo "Press [ENTER] to continue."
 			read -r REPLY 
+			main
 			;;
 			
 		# GPU drivers
@@ -104,11 +122,19 @@ main() {
 			# Remove duplicate lines from template
 			awk '!visited[$0]++' $template > $custom
 			rm -rf $template
+			unset $rc
+			unset $bootcfg
+			unset $xinitrc
+			unset $fstab
+			unset $sysctl
+			unset $jailrc
+			unset $template
+			unset $custom
 			clear
 			echo "###################################################################"
 			echo "#                                                                 #"
 			echo "# Some changes may require you to reboot for them to take effect. #"
-			echo "# Make sure you look over the temaple before running it.          #"
+			echo "# Your template is located at /tmp/quicced-template               #"
 			echo "#                                                                 #"
 			echo "###################################################################"
 			exit 0
@@ -155,7 +181,6 @@ graphics() {
 			echo "Press [ENTER] to continue."
 			read -r REPLY 
 			graphics
-
 			;;
 		
 		# Radeon
@@ -685,7 +710,7 @@ server() {
 			server
 			;;
 		
-		# Sevure MariaDB	
+		# Secure MariaDB	
 		2)
 			mysql_secure_installation
 			echo "mysql_secure_installation" >> $template
@@ -810,7 +835,7 @@ compat() {
 if [ $(id -u) != 0 ];
 then
 	echo "Must be run as root!"
-	exit 1
+	exit 2
 fi
 
 
@@ -852,5 +877,5 @@ then
 	main
 else
 	echo "Only i386 & amd64 are supported!"
-	exit 1
+	exit 2
 fi

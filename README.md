@@ -21,7 +21,7 @@ What started out as a small script for me to quickly configure a FreeBSD system 
 New features, not fully tested.
 
 ## Planned Features
-- Proper error handling
+- Improve error handling
 - NVIDIA drivers
 - VirtualBox drivers
 - Jail deployment
